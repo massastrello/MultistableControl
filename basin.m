@@ -1,11 +1,11 @@
 close all
 clear all
 %
-l = [-2,-1.5];
-u = [2,1.5];
+l = [-1,-1];
+u = [1,1];
 pf = [-.5,0;.5,0];
-N = 50;%
-T = 100;
+N = 1000;%
+T = 200;
 
 [X,Y,B] = basin2D(l,u,pf,N,T);
 %
@@ -15,6 +15,24 @@ T = 100;
 figure()
 surf(Xm,Ym,B,'EdgeColor','None')
 view(2)
+%
+figure;
+[~,h] = contourf(Xm,Ym,B);
+%caxis([190 270]);
+set(h,'linestyle','none');
+hold on;
+
+% plot hatching region:
+[c2,h2] = contourf(Xm,Ym,B,[2 3]); % plots only the 2 contour
+set(h2,'linestyle','none','Tag','HatchingRegion');
+hold off;                                 
+ax1 = gca;
+ax2 = copyobj(ax1,figure);
+
+% Example 1: Default hatching
+hp = findobj(ax1,'Tag','HatchingRegion');
+hh = hatchfill2(hp,'single','LineWidth',1.5,'Fill','off');
+
 %
 function [X,Y,B] = basin2D(l,u,pf,N,T)
     f = waitbar(0,'Please wait...');
@@ -44,5 +62,5 @@ end
 %
 %
 function dxdt = nlsys(t,x)
-    dxdt = [x(2);-100*x(2)-8*(x(1)^3)+2*x(1)];
+    dxdt = [x(2);-0.1*x(2)-8*(x(1)^3)+2*x(1)];
 end
