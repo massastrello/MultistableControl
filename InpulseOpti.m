@@ -72,6 +72,16 @@ x0 = x4(end,:);
 %
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Compute error norms
+xj = [0.5;0];
+xi = [-0.5;0];
+e1 = xj - expm(var(1)*A)*(xi+B*var(2));
+ne1 = norm(e1)
+xj = [-0.5;0];
+xi = [0.5;0];
+e2 = xj - expm(var2(1)*A)*(xi+B*var2(2));
+ne2 = norm(e2)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Results
 % Append state & time vectors
 t = [t1;t2'+t1(end);t3+t1(end)+t2(end);t4'+t3(end)+t1(end)+t2(end);t5+t4(end)+t3(end)+t1(end)+t2(end)];
@@ -132,16 +142,37 @@ hold off
 xlabel('$\xi(t)$')
 ylabel('$\dot{xi}(t)$')
 box on
-
+%
 basincon(var2,A,B,xi,xj)
 xff = limsol(var2,A,B,xi);
+%
+% Comoute Control efforts
+% energy shaping
+u_es = [-8*(x1(:,1).^3)+(2+5)*x1(:,1);...
+       zeros(length(t2),1);...
+       -8*(x3(:,1).^3)+(2+5)*x3(:,1);...
+       zeros(length(t4),1);...
+       -8*(x5(:,1).^3)+(2+5)*x5(:,1)];
+
+u_di = [-4.5.*x1(:,2);...
+       zeros(length(t2),1);...
+       -4.5.*x3(:,2);...
+       zeros(length(t4),1);...
+       -4.5.*x5(:,2)];
+figure()
+box on
+plot(t,u_es,'k','LineWidth',2)
+hold on
+plot(t,u_di,':k','LineWidth',2)
+xlabel('t')
+ylabel('\beta(x(t)), v(t)')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Functions
 %
 % Cost Function
 function IDX = cost(var,A,B,xi,xj)
     e = xj - expm(var(1)*A)*(xi+B*var(2));
-    IDX = 2*var(2)^2 + norm(e)^2;
+    IDX = 0.001*var(2)^2 + norm(e)^2;
     %IDX = IDX + ((xi+B*var(2))')*( ((A+A')^-1)*(expm(var(1)*(A+A'))-eye(2)))*(xi+B*var(2));
 end
 % Nonlinear Constraint (Appartenenza al basin of attraction)

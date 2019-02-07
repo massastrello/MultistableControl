@@ -1,20 +1,26 @@
+% Approximate the basins of attraction of the fixed points of the system in
+% a bounded region of the state-space.
+% The algorithm approximate the infinite time limit of the state for initial
+% conditions taken from a grid and computes the distance to the fixed
+% points. The point of the grid (i.e. the initial condition) will belong to
+% the basin of attraction of the closer fixed point.
+
 close all
 clear all
 %
-l = [-1,-1];
-u = [1,1];
-pf = [-.5,0;.5,0];
-N = 1000;%
-T = 200;
+l = [-1,-1]; % lower bounds (x,y)
+u = [1,1];   % upper bounds (x,y)
+pf = [-.5,0;.5,0]; % fixed points of the system
+N = 400;   % number of points in the grid
+T = 100; % simulation time (approximation of infinity)
 
+% Compute map of the basins of attraction.
 [X,Y,B] = basin2D(l,u,pf,N,T);
-%
+
+%% Plots
 [Xm,Ym] = meshgrid(X,Y);
 %Bm = griddata(X,Y,B,Xm,Ym,'natural');
 
-figure()
-surf(Xm,Ym,B,'EdgeColor','None')
-view(2)
 %
 figure;
 [~,h] = contourf(Xm,Ym,B);
@@ -25,15 +31,20 @@ hold on;
 % plot hatching region:
 [c2,h2] = contourf(Xm,Ym,B,[2 3]); % plots only the 2 contour
 set(h2,'linestyle','none','Tag','HatchingRegion');
-hold off;                                 
+hold off;  
+
 ax1 = gca;
 ax2 = copyobj(ax1,figure);
 
-% Example 1: Default hatching
+% Add hatching
 hp = findobj(ax1,'Tag','HatchingRegion');
 hh = hatchfill2(hp,'single','LineWidth',1.5,'Fill','off');
-
 %
+%% save in .dat file
+dataB = [ Xm(:) Ym(:) B(:) ];
+save B.dat dataB -ASCII
+%
+%% Functions Definition
 function [X,Y,B] = basin2D(l,u,pf,N,T)
     f = waitbar(0,'Please wait...');
     X = linspace(l(1),u(1),N);
@@ -45,6 +56,7 @@ function [X,Y,B] = basin2D(l,u,pf,N,T)
     opts = odeset('RelTol',1e-6,'AbsTol',1e-6);
     for i = 1:N
         waitbar(i/N,f)
+        tic
         for j = 1:N
             x0 = [X(i),Y(j)];
             [~,x] = ode45(@nlsys,[0,T],x0,opts);
@@ -55,6 +67,7 @@ function [X,Y,B] = basin2D(l,u,pf,N,T)
             idx = D(:,2) == min(D(:,2));
             B(j,i) = D(idx,1);
         end
+        toc
     end
     delete(f)
 end
